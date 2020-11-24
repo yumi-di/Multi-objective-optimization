@@ -54,12 +54,8 @@ def chooseFun(fun_name):
         x_num = 10
         dtlz2 = np.loadtxt('DTLZ2.txt')
         best_solution = dtlz2
-    if fun_name == 'ZDT4':
-        x_min = np.array([[0, -5, -5, -5, -5, -5, -5, -5, -5, -5]], dtype=float)  # 决策变量的最小值
-        x_max = np.array([[1, 5, 5, 5, 5, 5, 5, 5, 5, 5]], dtype=float)  # 决策变量的最大值
-    else:
-        x_min = np.zeros((1, x_num))
-        x_max = np.ones((1, x_num))
+    x_min = np.zeros((1, x_num))
+    x_max = np.ones((1, x_num))
 
     return f_num, x_num, x_min, x_max, best_solution
 
@@ -88,6 +84,7 @@ class NSGA2():
         for i in range(N):
             chromo = [0 for _ in range(x_num)]
             for j in range(x_num):
+                # chromo[j] = 0.0005 # ZDT4时
                 chromo[j] = x_min[0, j] + (x_max[0, j] - x_min[0, j]) * random.random()
             self.population.append(Individual(chromo))
 
@@ -321,9 +318,9 @@ class Individual():
             f1 = float(x[0])
             sum1 = 0.0
             for i in range(x_num - 1):
-                sum1 += x[i + 1] ** 2 - 10 * math.cos(4 * math.pi * x[i + 1])
+                sum1 += (x[i + 1] ** 2 - 10 * math.cos(4 * math.pi * x[i + 1]))
             g = float(1 + 9 * 10 + sum1)
-            f2 = g * (1 - (f1 / g) ** 0.5)
+            f2 = g * (1 - ((f1 / g) ** 0.5))
             self.f = [f1, f2]
         elif fun_name == 'ZDT6':
             f1 = float(1 - math.exp(-4 * x[0]) * (math.sin(6 * math.pi * x[0])) ** 6)
@@ -334,14 +331,22 @@ class Individual():
             f2 = g * (1 - (f1 / g) ** 2)
             self.f = [f1, f2]
         elif fun_name == 'DTLZ1':
-            sum1 = 0.0
-            for i in range(x_num - 2):
-                sum1 += (x[i + 2] - 0.5) ** 2 - math.cos(20 * math.pi * (x[i + 2] - 0.5))
-                g = float(100 * (x_num - 2) + 100 * sum1)
-                f1 = float((1 + g) * x[0] * x[1])
-                f2 = float((1 + g) * x[0] * (1 - x[1]))
-                f3 = float((1 + g) * (1 - x[0]))
-                self.f = [f1, f2, f3]
+            # sum1 = 0.0
+            # for i in range(x_num - 2):
+            #     sum1 += (x[i + 2] - 0.5) ** 2 - math.cos(20 * math.pi * (x[i + 2] - 0.5))
+            #     g = float(100 * (x_num - 2) + 100 * sum1)
+            #     f1 = float((1 + g) * x[0] * x[1])
+            #     f2 = float((1 + g) * x[0] * (1 - x[1]))
+            #     f3 = float((1 + g) * (1 - x[0]))
+            #     self.f = [f1, f2, f3]
+            sum1=0.0
+            for i in range(x_num-2):
+                sum1=sum1+(x[i+2]-0.5)**2-math.cos(20*math.pi*(x[i+2]-0.5))
+            g=float(100*(x_num-2)+100*sum1)
+            f1=float((1+g)*x[0]*x[1])
+            f2=float((1+g)*x[0]*(1-x[1]))
+            f3=float((1+g)*(1-x[0]))
+            self.f=[f1,f2,f3]
         elif fun_name == 'DTLZ2':
             sum1 = 0.0
             for i in range(x_num - 2):
@@ -423,7 +428,7 @@ def draw_process_diagram(population, fun_name, f_num):
             y.append(population[i].f[1])
         plt.scatter(data[:, 0], data[:, 1], marker='o', color='green', s=40)  # best_solution 参考图
         plt.scatter(x, y, marker='o', color='red', s=40)
-        plt.xlabel('f1' + str(iter))
+        plt.xlabel('f1' )
         plt.ylabel('f2')
         plt.show()
     elif f_num == 3:
@@ -523,17 +528,70 @@ def run_NSGA(fun_name, N, max_iter, pc, yita1, yita2, process_diagram=False):
 
 
 if __name__ == "__main__":
-    N = 150
+    N = 100
     fun_list = ['ZDT1', 'ZDT2', 'ZDT3', 'ZDT4', 'ZDT6', 'DTLZ1', 'DTLZ2']
-    max_iter = 200 * 100
+    max_iter = 20*100
     pc = 0.8
     yita1 = 2
     yita2 = 5
 
-    # fun_name = fun_list[6]
-    # run_NSGA(fun_name, N, max_iter, pc, yita1, yita2, process_diagram=True)
-
+    # fun_name = fun_list[3]
+    # # run_NSGA(fun_name, N, max_iter, pc, yita1, yita2, process_diagram=True)
     # run_NSGA(fun_name, N, max_iter, pc, yita1, yita2)
 
     for fun_name in fun_list:
         run_NSGA(fun_name, N, max_iter, pc, yita1, yita2)
+
+    '''
+        运行结果：
+        ZDT1 N=150 iter=2w 
+        循环时间:968.033493秒
+        c-metric 0.346667
+        D-metric: 0.014203
+        
+        ZDT2 N=150 iter=2w
+        循环时间:956.662319秒
+        c-metric 0.540000
+        D-metric: 0.014295
+        
+        ZDT3 N=150 iter=2w
+        循环时间:1279.649200秒
+        c-metric 0.200000
+        D-metric: 0.005635
+        
+        --------------------------------------------
+        ZDT1 N=100 iter=1w
+        循环时间:244.050611秒
+        c-metric 0.130000
+        D-metric: 0.030586
+        
+        ZDT2 N=100 iter=1w
+        循环时间:262.449080秒
+        c-metric 0.490000
+        D-metric: 0.032596
+        
+        ZDT3 N=100 iter=1w
+        循环时间:381.907271秒
+        c-metric 0.150000
+        D-metric: 0.010896
+        
+        ZDT4 N=100,iter=1w
+        循环时间:231.705506秒
+        c-metric 0.020000
+        D-metric: 0.011695
+        
+        ZDR6 N=100,iter=1w
+        循环时间:224.083596秒
+        c-metric 0.620000
+        D-metric: 0.114967
+        
+        DTZL1 N=100,iter=1w
+        循环时间:298.191623秒
+        c-metric 0.920000
+        D-metric: 2616.417915
+        
+        DTLZ2 N=100,iter=1w
+        循环时间:261.973252秒
+        c-metric 0.140000
+        D-metric: 1.263843
+    '''
